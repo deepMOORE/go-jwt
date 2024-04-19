@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile</title>
+</head>
+<body>
+<div class="user">
+    <span class="user-id"></span><br>
+    <span class="user-email"></span><br>
+</div>
+</body>
+<script>
+    fetch('http://localhost:8080/api/user', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+    })
+        .then((response) => response.json())
+        .then((json) => {
+            if (json.error) {
+                window.location.href = 'index.html';
+            } else {
+                console.log(json);
+                document.querySelector('.user-id').textContent = "ID: " + json.data.id;
+                document.querySelector('.user-email').textContent = "Email: " + json.data.email;
+            }
+        })
+</script>
+</html>

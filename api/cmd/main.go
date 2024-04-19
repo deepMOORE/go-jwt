@@ -40,6 +40,8 @@ func main() {
 	mux.Use(middleware.Logger)
 	mux.Use(cors.Handler(cors.Options{
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedOrigins: []string{"https://*", "http://*"},
+		AllowedHeaders: []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 	}))
 
 	mux.Route("/api", func(mux chi.Router) {

@@ -10,7 +10,7 @@ import (
 )
 
 const JWT_KEY = "secret_key"
-const JWT_DURATION_IN_SECONDS = 30
+const JWT_DURATION_IN_SECONDS = 10
 const TOKEN_TYPE = "Bearer"
 
 type LoginPayload struct {

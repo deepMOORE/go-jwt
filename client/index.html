@@ -8,14 +8,40 @@
     <title>Advanced JWT</title>
 </head>
 <body>
-<form action="/submit-form" method="post">
+<form method="post">
     <label for="login">Login:</label><br>
     <input type="text" id="login" name="login"><br>
 
     <label for="password">Password:</label><br>
     <input type="password" id="password" name="password"><br><br>
-
-    <input type="submit" value="Sign In">
+    <div class="error-message" style="display: none">Email and password is incorrect</div>
+    <button class="btn sign-in-btn">Sign In</button>
 </form>
 </body>
+<script>
+    document.querySelector('.sign-in-btn').addEventListener('click', async function (event) {
+        document.querySelector('.error-message').style.display = 'none';
+        event.preventDefault();
+        const body = {
+            email: document.querySelector('#login').value,
+            password: document.querySelector('#password').value
+        };
+        let response = await fetch('http://localhost:8080/api/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+        });
+
+        if (response.ok) {
+            let result = await response.json();
+            localStorage.setItem('token', result.data.token);
+
+            window.location.href = 'user.html';
+        } else {
+            document.querySelector('.error-message').style.display = 'block';
+        }
+    });
+</script>
 </html>
