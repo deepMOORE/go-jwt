@@ -13,9 +13,9 @@
 <script>
     fetch('http://localhost:8080/api/user', {
         method: 'GET',
+        credentials: 'include',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('token')
         },
     })
         .then((response) => response.json())

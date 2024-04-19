@@ -10,8 +10,8 @@ import (
 )
 
 const JWT_KEY = "secret_key"
-const JWT_DURATION_IN_SECONDS = 10
-const TOKEN_TYPE = "Bearer"
+const JWT_DURATION_IN_SECONDS = 120
+const JWT_COOKIE_NAME = "Bearer"
 
 type LoginPayload struct {
 	Email    string `json:"email"`
@@ -54,6 +54,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	http.SetCookie(w, &http.Cookie{
+		Value:    token,
+		Name:     JWT_COOKIE_NAME,
+		HttpOnly: true,
+	})
 	response.Error = false
 	response.Message = "ok"
 	response.Data = LoginResponse{
