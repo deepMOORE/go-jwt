@@ -19,7 +19,7 @@ func JwtAuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie(JWT_COOKIE_NAME)
 		if err != nil {
-			log.Print("Error accessing cookie", err)
+			log.Print("Error accessing cookie: ", err)
 			UnauthorizedResponse(w)
 			return
 		}
@@ -32,8 +32,7 @@ func JwtAuthMiddleware(next http.Handler) http.Handler {
 		})
 
 		if err != nil {
-			log.Printf("Error decoding token")
-			log.Print(err)
+			log.Print("Error decoding token: ", err)
 			UnauthorizedResponse(w)
 			return
 		}
@@ -43,6 +42,10 @@ func JwtAuthMiddleware(next http.Handler) http.Handler {
 				UserId: claims.UserId,
 			})
 			next.ServeHTTP(w, r.WithContext(ctx))
+		} else {
+			log.Print("Invalid token: ", err)
+			UnauthorizedResponse(w)
+			return
 		}
 	})
 }
