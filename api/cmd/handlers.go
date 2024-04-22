@@ -9,9 +9,13 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-const JWT_KEY = "secret_key"
-const JWT_DURATION_IN_SECONDS = 120
-const JWT_COOKIE_NAME = "Bearer"
+const JWT_ACCESS_TOKEN_KEY = "secret_key"
+const JWT_ACCESS_TOKEN_DURATION_IN_SECONDS = 5 // 5 seconds
+const JWT_ACCESS_TOKEN_NAME = "Access"
+
+const JWT_REFRESH_TOKEN_KEY = "key_secret"
+const JWT_REFRESH_TOKEN_DURATION_IN_SECONDS = 2592000 // 1 month
+const JWT_REFRESH_TOKEN_NAME = "Refresh"
 
 type LoginPayload struct {
 	Email    string `json:"email"`
@@ -45,26 +49,64 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := createJwtToken(user)
+	err = authenticateToSetTokens(w, user)
+
 	if err != nil {
-		log.Panic(err)
+		log.Print("something went wrong")
 		response.Error = true
-		response.Message = "Oops, something went wrong!"
+		response.Message = "Invalid email or password"
 		WriteJSON(w, http.StatusBadRequest, response)
 		return
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Value:    token,
-		Name:     JWT_COOKIE_NAME,
-		HttpOnly: true,
-	})
 	response.Error = false
 	response.Message = "ok"
-	response.Data = LoginResponse{
-		Token: token,
-	}
+
 	WriteJSON(w, http.StatusOK, response)
+}
+
+func AuthenticateById(w http.ResponseWriter, userId int) error {
+	user, err := getUserById(userId)
+	if err != nil {
+		return err
+	}
+
+	return authenticateToSetTokens(w, user)
+}
+
+func authenticateToSetTokens(w http.ResponseWriter, user UserDto) error {
+	accessToken, refreshToken, err := createTokenPair(user)
+
+	if err != nil {
+		return err
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Value:    accessToken,
+		Name:     JWT_ACCESS_TOKEN_NAME,
+		HttpOnly: true,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Value:    refreshToken,
+		Name:     JWT_REFRESH_TOKEN_NAME,
+		HttpOnly: true,
+	})
+
+	return nil
+}
+
+func createTokenPair(user UserDto) (string, string, error) {
+	accessToken, err := createAccessToken(user)
+	if err != nil {
+		return "", "", err
+	}
+
+	refreshToken, err := createRefreshToken()
+	if err != nil {
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, err
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
@@ -113,15 +155,27 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func createJwtToken(user UserDto) (string, error) {
+func createAccessToken(user UserDto) (string, error) {
 	claims := &Claims{
 		UserId: user.Id,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(JWT_DURATION_IN_SECONDS * time.Second)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(JWT_ACCESS_TOKEN_DURATION_IN_SECONDS * time.Second)),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return token.SignedString([]byte(JWT_KEY))
+	return token.SignedString([]byte(JWT_ACCESS_TOKEN_KEY))
+}
+
+func createRefreshToken() (string, error) {
+	claims := &Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(JWT_REFRESH_TOKEN_DURATION_IN_SECONDS * time.Second)),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	return token.SignedString([]byte(JWT_REFRESH_TOKEN_KEY))
 }
