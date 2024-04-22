@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -22,10 +21,6 @@ type LoginPayload struct {
 	Password string `json:"password"`
 }
 
-type LoginResponse struct {
-	Token string `json:"token"`
-}
-
 type UserResponse struct {
 	Id    int    `json:"id"`
 	Email string `json:"email"`
@@ -41,7 +36,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	var response JsonResponse
 
-	user, err := getUserByEmailAndPassword(payload.Email, payload.Password)
+	user, err := GetUserByEmailAndPassword(payload.Email, payload.Password)
 	if err != nil {
 		response.Error = true
 		response.Message = "Invalid email or password"
@@ -66,7 +61,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func AuthenticateById(w http.ResponseWriter, userId int) error {
-	user, err := getUserById(userId)
+	user, err := GetUserById(userId)
 	if err != nil {
 		return err
 	}
@@ -112,7 +107,7 @@ func createTokenPair(user UserDto) (string, string, error) {
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	authInfo := r.Context().Value(ContextAuthInfoKey).(AuthInfo)
 
-	user, err := getUserById(authInfo.UserId)
+	user, err := GetUserById(authInfo.UserId)
 
 	var response JsonResponse
 	if err != nil {
@@ -128,26 +123,6 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	WriteJSON(w, http.StatusOK, response)
-}
-
-func getUserByEmailAndPassword(email string, password string) (UserDto, error) {
-	for _, user := range Users {
-		if user.Email == email && user.Password == password {
-			return user, nil
-		}
-	}
-
-	return UserDto{}, errors.New("user not found")
-}
-
-func getUserById(userId int) (UserDto, error) {
-	for _, user := range Users {
-		if user.Id == userId {
-			return user, nil
-		}
-	}
-
-	return UserDto{}, errors.New("user not found")
 }
 
 type Claims struct {

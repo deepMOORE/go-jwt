@@ -39,7 +39,7 @@ func main() {
 	mux := chi.NewRouter()
 	mux.Use(middleware.Logger)
 	mux.Use(cors.Handler(cors.Options{
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions},
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		AllowCredentials: true,
